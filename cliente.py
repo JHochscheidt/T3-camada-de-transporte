@@ -11,77 +11,65 @@ import socket
 # Funcao que mostra como deve ser a entrada, caso ocorra algum erro
 def informacoesEntrada():
 	print("Argumentos:")
-	print("python "+__file__+" <IPServer> <porta> <caminho_do_arquivo_coordenadas.csv>")
+	print("python "+__file__+" <IPServer> <porta> <caminho_do_arquivo_coordenadas>")
 	sys.exit()
 
 def enviarDados(IPServer, porta, caminhoArquivo):
-    mensagem = socket_tcp_cliente.recv(4096)
-    if(mensagem == "PRONTO"):
-        # servidor esta pronto para receber dados
-        try:
-            print "Enviando arquivo para " + IPServer + ":" + str(porta)
-            arquivo = open(caminhoArquivo, 'r')
-            dados = arquivo.read();
-            socket_tcp_cliente.send(dados)
-            while dados != "":
-                dados = arquivo.read();
-                socket_tcp_cliente.send(dados)
-            socket_tcp_cliente.send("***EOF***")
-            arquivo.close()
-            msg_enviado = socket_tcp_cliente.recv(4096)
-            if(msg_enviado == "DOWNLOAD CONCLUIDO"):
-                ### aqui fazer metodo que le o arquivo gerado no servidor que sera enviado de volta para o cliente
-                msg_processamento = socket_tcp_cliente.recv(4096)
-                if(msg_processamento == "PROCESSAMENTO CONCLUIDO"):
-                    socket_tcp_cliente.send("PRONTO PARA RECEBER")
-                    receberDados(caminhoArquivo)
-                else:
-                    print "NAO FOI POSSIVEL PROCESSAR DADOS"
+	mensagem = socket_tcp_cliente.recv(4096)
+	if(mensagem == "PRONTO PARA RECEBER DADOS"):
+		try:
+			print "Enviando arquivo para " + IPServer + ":" + str(porta)
+			arquivo = open(caminhoArquivo, 'r')
+			dados = arquivo.read();
+			socket_tcp_cliente.send(dados)
+			while dados != "":
+				dados = arquivo.read();
+				socket_tcp_cliente.send(dados)
+			# pra "avisar ao servidor que terminou o arquivo"
+			socket_tcp_cliente.send("EOF")
+			print "fim arquivo"
+			arquivo.close()
 
-            else:
-                print "Erro ao enviar o arquivo"
-                socket_tcp_cliente.close()
-
-
-        except Exception as msg:
-            print("Error message: "+str(msg))
-            return False
-        return True
-    elif(mensagem == "ERRO"):
-        print "servidor nao permitiu conexao por algum motivo"
-        return False
-
-    else:
-        print "Algum erro" + mensagem
-        return False
+			msg_concluido = socket_tcp_cliente.recv(4096)
+			if(msg_concluido == "DOWNLOAD CONCLUIDO"):
+				print "cliente baixou arquivo"
+				msg_processamento = socket_tcp_cliente.recv(4096)
+				if(msg_processamento == "PROCESSAMENTO CONCLUIDO"):
+					socket_tcp_cliente.send("PRONTO PARA RECEBER RESPOSTA")
+					print "cliente pronto para receber resposta"
+					receberDados(caminhoArquivo)
+				else:
+					print "NAO FOI POSSIVEL PROCESSAR DADOS"
+			else:
+				print "Erro ao enviar o arquivo"
+				#socket_tcp_cliente.close()
+		except Exception as msg:
+			print("Error message: "+str(msg))
+			return False
+		return True
+	elif(mensagem == "ERRO"):
+		print "servidor nao permitiu conexao por algum motivo"
+		return False
+	else:
+		print "Algum erro" + mensagem
+		return False
 
 def receberDados(caminhoArquivo):
-    caminhoArquivo = "SAIDA" + caminhoArquivo
-    try:
-        arq_temp = open(caminhoArquivo, 'wb')
-        #socket_tcp_cliente.send("PRONTO")
-        print "Baixando arquivo..."
-
-        while 1:
-            dados = socket_tcp_cliente.recv(4096)
-            print dados
-            if(dados == "***EOF***"):
-                print "Fechando arquivo..."
-                arq_temp.close()
-                print "Arquivo fechado"
-                break
-            else:
-                print "Escrevendo"
-                arq_temp.write(dados)
-
-        socket_tcp_cliente.send("DOWNLOAD CONCLUIDO")
-        #print "Download de arquivo concluido"
-
-    except Exception as msg:
-        socket_tcp_cliente.send("ERROR")
-        #File Error.
-        print("Error message: "+str(msg))
-        return
+	caminhoArquivo = "SAIDA" + caminhoArquivo
+	print "pronto para receber"
+	try:
+		arq_temp = open(caminhoArquivo, 'w')
+		while True:
+			dados = socket_tcp_cliente.recv(4096)
+			if(dados == "EOF"):
+				arq_temp.close()
+				break
+			arq_temp.write(dados)
+		socket_tcp_cliente.send("DOWNLOAD CONCLUIDO")
+		socket_tcp_cliente.close()
+	except Exception as msg:
+		print("Error message: "+str(msg))
+		return False
 
 # Funcao para enviar o arquivo para o servidor
 #def enviarArquivo(IPServer, porta, caminhoArquivo):
@@ -94,7 +82,6 @@ try:
 	caminhoArquivo = sys.argv[3]
 except:
 	informacoesEntrada()
-
 
 socket_tcp_cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -109,8 +96,8 @@ if (os.path.exists(caminhoArquivo)):
 		print msg
 		sys.exit()
 
-        socket_tcp_cliente.send("PRONTO PARA ENVIAR ARQUIVO")
-        enviarDados(IPServer,porta,caminhoArquivo)
+	socket_tcp_cliente.send("ENVIANDO DADOS")
+	enviarDados(IPServer,porta,caminhoArquivo)
 
 else:
 	print("File does not exists.")

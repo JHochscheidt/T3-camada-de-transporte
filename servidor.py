@@ -15,7 +15,6 @@ HOST = ''
 PORT = 8095              # Arbitrary non-privileged port
 
 def haversine(lat1,long1,lat2,long2):
-
     RAIO_PLANETA_TERRA = 6371  # in km
     # convert all latitudes/longitudes from decimal degrees to radians
     lat1, long1, lat2, long2 = map(radians, (lat1, long1, lat2, long2))
@@ -29,35 +28,34 @@ def haversine(lat1,long1,lat2,long2):
 
 # funcao que faz o processamento dos dados enviados pelo cliente
 def processarArquivo(conexao, arquivo_temporario):
-    #print "Processamento em andamento..."
+    print "processando dados"
     try:
         arq_temp = open(arquivo_temporario, 'r')
-        arquivo_saida = open ("arquivo_saida.csv", 'wb')
+        print "nome arquivo temporario --->", arquivo_temporario
+        saida_temp = "SAIDA_" + arquivo_temporario
+        print saida_temp
+        arquivo_saida = open (saida_temp, 'w')
         ### processa linha por linha e escreve no arquivo de saida
+
         for linha in arq_temp:
             ### remover /n do final
             linhaTemp = linha[0:-1]
-
             #separar valores
             separarVirgula = linhaTemp.split(',')
-
             #tirar todos os espacos
             lat1 = separarVirgula[0].split()
             long1 = separarVirgula[1].split()
             lat2 = separarVirgula[2].split()
             long2 = separarVirgula[3].split()
-
             #cast pra float
             lat1 = float(lat1[0])
             long1 = float(long1[0])
             lat2 = float(lat2[0])
             long2 = float(long2[0])
-
-
             ### tratar dados
             distancia = haversine(lat1,long1,lat2,long2)
             ### escrever as coordenadas e a distancia no arquivo
-            saida = str(lat1) + "," + str(long1) + "," + str(lat2) + "," + str(long2) + "," + str(distancia)
+            saida = str(lat1) + "," + str(long1) + "," + str(lat2) + "," + str(long2) + "," + str(distancia) + "\n"
             arquivo_saida.write(saida)
         arq_temp.close()
         arquivo_saida.close()
@@ -66,86 +64,72 @@ def processarArquivo(conexao, arquivo_temporario):
         sys.exit()
 
 # funcao que faz a comunicacao com o cliente fazendo a leitura do arquivo ( que o cliente esta enviando ao server)
-def receberDados(conexao):
-    arquivo_temporario = "fileTemp.csv"
+def receberDados(conexao, caminhoArquivo):
+    arquivo_temporario = caminhoArquivo + "fileTemp.csv"
     try:
-        arq_temp = open(arquivo_temporario, 'wb')
-        conexao.send("PRONTO")
-        #print "Baixando arquivo..."
+        arq_temp = open(arquivo_temporario, 'w')
         while 1:
             dados = conexao.recv(4096)
-            #print dados
-            if(dados == "***EOF***"):
-                #print "Fechando arquivo..."
+            if(dados == "EOF"):
                 arq_temp.close()
-                #print "Arquivo fechado"
                 break
-            else:
-                #print "Escrevendo"
-                arq_temp.write(dados)
-
+            arq_temp.write(dados)
         conexao.send("DOWNLOAD CONCLUIDO")
-        #print "Download de arquivo concluido"
 
         ## processar dados do "fileTemp.csv aqui"
-        print "Processando arquivo"
         processarArquivo(conexao, arquivo_temporario)
-
-        print "Arquivo processado"
-        ## enviar para o cliente o resultado da busca
-
+        ## enviar para o cliente o resultado
         conexao.send("PROCESSAMENTO CONCLUIDO")
-
-
     except Exception as msg:
         conexao.send("ERROR")
         #File Error.
         print("Error message: "+str(msg))
         return
 
+# funcao inicia uma nova thread para conexao
 def infoConexao(conexao, endereco_cliente):
-    ###Function that starts a new thread for the connection
     mensagem = conexao.recv(1024)
-    if (mensagem=="PRONTO PARA ENVIAR ARQUIVO"):
+    if (mensagem=="ENVIANDO DADOS"):
         print "Conexao estabelecida com " + str(endereco_cliente)
-        receberDados(conexao)
+        conexao.send("PRONTO PARA RECEBER DADOS")
+        caminhoArquivo = str(endereco_cliente[1])
+        receberDados(conexao, caminhoArquivo)
+
+        msg_retorno = conexao.recv(1024)
+        if(msg_retorno == "PRONTO PARA RECEBER RESPOSTA"):
+            enviarDados(conexao, caminhoArquivo)
     else:
         conexao.close()
     thread.exit()
 
-
 def enviarDados(conexao, caminhoArquivo):
     print "Enviando dados cliente"
-
-    msg_cliente_pronto = socket_tcp_server.recv(4096)
-
-    if(msg_cliente_pronto == "PRONTO PARA RECEBER"):
-        try:
-            arquivo = open(caminhoArquivo, 'r')
-            dados = arquivo.read()
+    caminhoArquivo = "SAIDA_" + caminhoArquivo + "fileTemp.csv"
+    print "aqui tem corrage ----> " + caminhoArquivo
+    try:
+        arquivo = open(caminhoArquivo, 'r')
+        dados = arquivo.read()
+        conexao.send(dados)
+        while dados != "":
+            print '[' + dados + ']'
+            dados = arquivo.read();
             conexao.send(dados)
-            while dados != "":
-                print '[' + dados + ']'
-                dados = arquivo.read();
-                conexao.send(dados)
+        conexao.send("EOF")
+        arquivo.close()
 
-            conexao.send("***EOF***")
-            arquivo.close()
+        msg_download_concluido = conexao.recv(4096)
+        if(msg_download_concluido == "DOWNLOAD CONCLUIDO"):
+            print "Encerrar conexao"
+            conexao.close()
+        else:
+            print "DOWNLOAD NAO CONCLUIDO"
+            #fechar conexao igual
 
-            msg_download_concluido = conexao.recv(4096)
-            if(msg_download_concluido == "DOWNLOAD CONCLUIDO"):
-                print "Encerrar conexao"
-                ##encerrar conexao
-            else:
-                print "DOWNLOAD NAO CONCLUIDO"
-        except:
-            print "ALGUM ERRO"
-            return False
-
-        return True
-    else:
-        print "NAO ESTA PRONTO"
+        conexao.close()
+    except:
+        print "ALGUM ERRO"
         return False
+    return True
 
 ### cria socket Ipv4
 socket_tcp_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
