@@ -1,0 +1,17 @@
+# coordenadas1.csv
+Milao, Madrid
+Lisboa, Londres
+Washington DC, Cidade do México
+Brasília, São Paulo
+
+# coordenadas2.csv
+Chapecó, Pinhalzinho
+Chapecó, Florianópolis
+Chapecó, Rio de Janeiro
+Chapecó, São Miguel do Oeste
+
+#coordenadas2.csv
+Sidney, Otawa
+Alaska, Tóquio
+Pequim, Roma
+Munique, Paris
