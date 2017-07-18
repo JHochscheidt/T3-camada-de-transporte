@@ -11,7 +11,7 @@ from math import radians, cos, sin, asin, sqrt
 #-*- coding: iso-8859-1 -*-
 
 # Echo server program
-HOST = ''
+HOST = '192.168.0.104'
 PORT = int(sys.argv[1])
 
 ## funcao de haversine, que calcula a distancia entre dois pontos
@@ -129,15 +129,17 @@ try:
     print (">>>Porta " + str(PORT) + " ativa")
 except socket.error as msg:
     print (">>>Erro bind")
-    print (">>>" + msg)
+    print (">>>" + str(msg))
+    sys.exit()
 
 try:
     socket_tcp_server.listen(5)
     print (">>>Ouvindo...")
 
 except socket.error as msg:
-    print (">>>"+msg)
+    print (">>>"+str(msg))
     print (">>>Erro listen")
+    sys.exit()
 
 try:
     while 1:

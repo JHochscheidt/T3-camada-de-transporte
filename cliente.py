@@ -86,7 +86,7 @@ if (os.path.exists(caminhoArquivo)):
 		print (">>>Conectado ao servidor " + IPServer + ":" + str(porta))
 	except socket.error as msg:
 		print (">>>Erro ao conectar com o servidor " + IPServer + ":" + str(porta))
-		print (">>>"+msg)
+		print (">>>"+ str(msg))
 		sys.exit()
 	socket_tcp_cliente.send("ENVIANDO DADOS")
 	enviarDados(IPServer,porta,caminhoArquivo)
