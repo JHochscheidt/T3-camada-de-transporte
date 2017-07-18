@@ -106,9 +106,10 @@ def enviarDados(conexao, caminhoArquivo, endereco_cliente):
         os.remove(caminhoArquivo) #para remover o arquivo temporario do diretorio
         msg_download_concluido = conexao.recv(512)
         if(msg_download_concluido == "DOWNLOAD CONCLUIDO"):
+            time.sleep(3)
             print (">>>Encerrando conexao...")
             conexao.close()
-            time.sleep(5)
+
             print (">>>Conexao com " + str(endereco_cliente) + " encerrada!")
         else:
             print (">>>DOWNLOAD NAO CONCLUIDO")
@@ -119,7 +120,7 @@ def enviarDados(conexao, caminhoArquivo, endereco_cliente):
         return False
     return True
 
-### cria socket Ipv4
+### cria socket Ipv4 TCP
 socket_tcp_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #para zerar o TIME_WAIT do socket
 socket_tcp_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

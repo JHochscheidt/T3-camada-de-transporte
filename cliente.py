@@ -8,12 +8,6 @@ import time
 #acentuacoes
 # -*- coding: utf-8 -*-
 
-# Funcao que mostra como deve ser a entrada, caso ocorra algum erro
-def argumentosEntrada():
-	print("Verifique os parametros de execucao do programa.\nArgumentos:")
-	print("python "+__file__+" <IPServer> <porta> <caminho_do_arquivo_coordenadas>")
-	sys.exit()
-
 def enviarDados(IPServer, porta, caminhoArquivo):
 	mensagem = socket_tcp_cliente.recv(512)
 	if(mensagem == "PRONTO PARA RECEBER DADOS"):
@@ -44,7 +38,7 @@ def enviarDados(IPServer, porta, caminhoArquivo):
 			return False
 		return True
 	elif(mensagem == "ERRO"):
-		print (">>>Servidor nao esta pronto para receber dados!")
+		print (">>>Servidor nao conseguiu receber dados!")
 		return False
 	else:
 		print (">>>Algum erro" + mensagem)
@@ -62,23 +56,24 @@ def receberDados(caminhoArquivo):
 				break
 			arq_temp.write(dados)
 		socket_tcp_cliente.send("DOWNLOAD CONCLUIDO")
+		time.sleep(3)
 		socket_tcp_cliente.close()
-		time.sleep(5)
 		print (">>>Conexao encerrada!")
 	# caso ocorra alguma excecao
 	except Exception as msg:
 		print(">>>Error message: "+str(msg))
 		return False
 
-# Le os argumentos da linha de comando, caso houver algum erro nos parametros, exibe mensagem de ajuda de como deve ser a entrada
+# Le os argumentos da linha de comando
 try:
 	IPServer = sys.argv[1]
 	porta = int(sys.argv[2])
 	caminhoArquivo = sys.argv[3]
 except:
-	argumentosEntrada()
+	print ("Erro nos parametros de execucao!")
+	sys.exit()
 
-# verifica e o arquivo com as coordenadas existe, para iniciar a conexao
+# verifica se o arquivo com as coordenadas existe, para iniciar a conexao
 if (os.path.exists(caminhoArquivo)):
 	try:
 		socket_tcp_cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # cria socket do lado cliente utilizando IPV4 com protocolo TCP
@@ -91,5 +86,5 @@ if (os.path.exists(caminhoArquivo)):
 	socket_tcp_cliente.send("ENVIANDO DADOS")
 	enviarDados(IPServer,porta,caminhoArquivo)
 else:
-	print(">>>Arquivo nao encontrado!")
+	print(">>>Arquivo " + str(caminhoArquivo) + " nao encontrado!")
 	sys.exit()

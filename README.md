@@ -1,8 +1,27 @@
+# Instruções de execução:
+#   lado servidor:
+    $ python servidor.py <porta>
+
+#   lado cliente:
+    $ python cliente.py <IPserver> <porta> <arquivo_com_as_coordenadas>
+
+# Exemplo:
+#   servidor:
+    $ python servidor.py 8095
+
+#   cliente:
+    $ python cliente.py localhost 8095 coordenadas1.csv
+
+
+
+
+#####  DESCRICAO DO TRABALHO #####
+
 # T3-camada-de-transporte
 
 Implemente dois programas na linguagem de sua eleição. Um se chamará “cliente” e outro “servidor”.
 
-Cliente: 
+Cliente:
 a) inicia por linha de comando com três argumentos (IPServer, porta e coordenadas.csv). Onde “porta” é o número da porta em que o servidor atende. Onde “coordenadas.csv” é um arquivo em que as linhas têm o seguinte formato (Lat1,Long1, Lat2,Long2). Ou seja, a latitude e longitude de dois pontos.
 
 O cliente usa TCP para conectar se com o servidor, lê o arquivo e envia para o servidor.

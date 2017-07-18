@@ -10,7 +10,7 @@ Chapecó, Florianópolis
 Chapecó, Rio de Janeiro
 Chapecó, São Miguel do Oeste
 
-#coordenadas2.csv
+#coordenadas3.csv
 Sidney, Otawa
 Alaska, Tóquio
 Pequim, Roma
