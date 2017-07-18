@@ -11,7 +11,7 @@ from math import radians, cos, sin, asin, sqrt
 #-*- coding: iso-8859-1 -*-
 
 # Echo server program
-HOST = '192.168.0.104'
+HOST = ''
 PORT = int(sys.argv[1])
 
 ## funcao de haversine, que calcula a distancia entre dois pontos
